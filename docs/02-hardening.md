@@ -3,9 +3,28 @@
 > Priority order on every box: **baseline → kick out attacker → harden → leave alone**.
 > Before changing anything, snapshot the current state to a notes file. Document for IR reports + injects.
 
+## Why this doc exists (read once)
+
+A "hardening" step is anything that makes a box harder to abuse without changing what the box *does for its users*. The mistake newcomers make is conflating these:
+
+- **Recon** (read-only): looking at what's there. Cannot break anything. Always safe.
+- **Containment**: disabling / killing / unplugging something the attacker is using. Can break a scored service if you misidentify what's legit.
+- **Hardening**: changing config to raise the bar (firewall rules, SSH config, password policy). Can break a scored service if the change closes a port the scoring engine needs.
+
+Do them in that order. Always **recon → contain → harden**, never the other way around. If you harden before recon, you'll firewall off the AD bind that authenticates the scoring engine and you'll wonder why the scoreboard went red.
+
+## How to use this doc during the round
+
+1. Open the section for the box you're working on (Blacklist / Concierge / Cabal / pfSense).
+2. Copy-paste the **recon** block first, into the box's terminal. Read the output. Save it somewhere (paste into your shared note doc).
+3. Decide what looks abnormal. The doc tells you what "normal" roughly looks like underneath each block.
+4. **Don't** copy-paste the "stop the bleeding" block blindly — those commands disable things. Pick the lines that match your actual finding.
+
 ## Universal Linux triage (Blacklist + Concierge)
 
 ### Recon (read-only, do these first)
+
+> These commands only *read* — no system state changes. Run them in order and screenshot or copy the output into your notes before you change anything. The point is to know what "normal looks like on this box" so you can spot deltas later.
 
 ```bash
 # users

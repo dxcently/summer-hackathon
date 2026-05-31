@@ -29,3 +29,6 @@ brief-ts-*.txt
 ecitadel-screenshots-*.png
 ecitadel-briefing-screenshots*.png
 *.png
+
+# gitignore gitignore
+.gitignore

@@ -1,5 +1,7 @@
 # 00 — Overview
 
+> **New to blue-team competitions?** Read `docs/00a-newcomer-primer.md` first — it frames the whole round before you dive into the scoring math here. Then `docs/08-glossary.md` if any of the acronyms below are unfamiliar (CCS, AD, SLA, inject, etc.).
+
 ## Scenario
 
 You are an FBI Joint Task Force read in on Notorious Fixer's criminal intelligence and trading network, now operating under federal control as **RR Intel** (domain `rrintel.internal`). Your job: keep RR Intel's systems online and secure so the network can keep producing intelligence.

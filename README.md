@@ -4,17 +4,21 @@ Personal prep workspace for the eCitadel S4 blue-team competition (CCS-style: fi
 
 ## Start here
 
-1. `tasks/todo.md` — the actual run-of-show plan with timeline + checklists
-2. `docs/00-overview.md` — scenario + scoring breakdown
-3. `docs/01-network.md` — topology, IPs, NAT, scoring engine notes
-4. `docs/02-hardening.md` — per-box hardening cheatsheet
-5. `docs/03-injects.md` — inject SOP + PDF rules
-6. `docs/04-services.md` — the 7 scored services + dependency map
-7. `docs/05-orange-team.md` — ticket SOP
-8. `docs/06-red-team.md` — IR + instant report SOP
-9. `docs/07-revert-policy.md` — when to revert, when not to
-10. `templates/inject-response.md` — copy-paste PDF template
-11. `templates/ir-report.md` — instant report template
+**New to CCDC-style blue-team comps?** Read `docs/00a-newcomer-primer.md` first — it frames the whole round so the rest of the docs land. Then `docs/08-glossary.md` so the acronyms in the other docs are decoded.
+
+1. `docs/00a-newcomer-primer.md` — **start here if you're new.** Mental model + what a round actually feels like
+2. `docs/08-glossary.md` — every acronym + term used in this folder
+3. `tasks/todo.md` — the actual run-of-show plan with timeline + checklists
+4. `docs/00-overview.md` — scenario + scoring breakdown
+5. `docs/01-network.md` — topology, IPs, NAT, scoring engine notes
+6. `docs/02-hardening.md` — per-box hardening cheatsheet
+7. `docs/03-injects.md` — inject SOP + PDF rules (includes a fully walked-through example at the bottom)
+8. `docs/04-services.md` — the 7 scored services + dependency map
+9. `docs/05-orange-team.md` — ticket SOP (includes a walked-through ticket example at the bottom)
+10. `docs/06-red-team.md` — IR + instant report SOP (includes a walked-through webshell-IR example at the bottom)
+11. `docs/07-revert-policy.md` — when to revert, when not to
+12. `templates/inject-response.md` — copy-paste PDF template
+13. `templates/ir-report.md` — instant report template
 
 ## Source material
 
