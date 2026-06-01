@@ -9,12 +9,12 @@
 # Usage (pfSense console option 8 → shell):
 #   nohup sh /root/watchdog-pfsense.sh > /dev/null 2>&1 &
 #   # to stop:
-#   kill $(cat /root/watchdog-thebox.pid)
+#   kill $(cat /root/.ecitadel/watchdog-thebox.pid)
 #
-# Outputs:
-#   /root/watchdog-thebox-baseline.txt
-#   /root/watchdog-thebox.log
-#   /root/watchdog-thebox.pid
+# Outputs (in /root/.ecitadel/ — created if missing, chmod 700):
+#   watchdog-thebox-baseline.txt
+#   watchdog-thebox.log
+#   watchdog-thebox.pid
 #
 # Tunables (env vars):
 #   WD_INTERVAL  seconds between ticks (default 60)
@@ -24,9 +24,12 @@ export LANG
 
 HOST="thebox"
 INTERVAL="${WD_INTERVAL:-60}"
-BASELINE_FILE="/root/watchdog-${HOST}-baseline.txt"
-LOG_FILE="/root/watchdog-${HOST}.log"
-PID_FILE="/root/watchdog-${HOST}.pid"
+WORKDIR="/root/.ecitadel"
+mkdir -p "$WORKDIR"
+chmod 700 "$WORKDIR" 2>/dev/null || true
+BASELINE_FILE="${WORKDIR}/watchdog-${HOST}-baseline.txt"
+LOG_FILE="${WORKDIR}/watchdog-${HOST}.log"
+PID_FILE="${WORKDIR}/watchdog-${HOST}.pid"
 
 # Daemons that matter on pfSense and should NOT silently disappear.
 # php-fpm/lighttpd = WebGUI, sshd = our admin access, unbound/dnsmasq

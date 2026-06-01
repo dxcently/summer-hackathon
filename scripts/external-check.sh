@@ -8,8 +8,8 @@
 # Example:
 #   bash external-check.sh 17
 #
-# Reads no local files. Writes one log to the current directory:
-#   ./external-check-<utc-timestamp>.log
+# Reads no local files. Writes one log to a hidden workdir in $HOME:
+#   ~/.ecitadel/external-check-<utc-timestamp>.log
 #
 # Read-only. Does not modify any remote system. Probes only your own
 # team's external /24 (172.27.<team>.0/24) — NEVER point this at another
@@ -36,8 +36,11 @@ WEB="${BASE}.102"
 DB="${BASE}.101"
 DOMAIN='rrintel.internal'
 
+WORKDIR="${HOME}/.ecitadel"
+mkdir -p "$WORKDIR"
+chmod 700 "$WORKDIR" 2>/dev/null || true
 TS=$(date -u +%Y%m%d-%H%M%SZ)
-OUT="./external-check-${TS}.log"
+OUT="${WORKDIR}/external-check-${TS}.log"
 
 section() {
     printf '\n\n=== %s ===\n' "$1" >>"$OUT"

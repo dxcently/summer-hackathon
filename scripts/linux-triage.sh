@@ -7,7 +7,7 @@
 # Usage (as root, on the box):
 #   sudo bash linux-triage.sh
 #
-# Output: ~/triage-<host>-<timestamp>.log
+# Output: ~/.ecitadel/triage-<host>-<timestamp>.log
 #
 # This script ONLY reads. It does not change any system state.
 # Safe to run multiple times; each run produces a new log file you can
@@ -17,7 +17,10 @@ set -u
 LANG=C
 export LANG
 
-OUT="${HOME}/triage-$(hostname)-$(date -u +%Y%m%d-%H%M%SZ).log"
+WORKDIR="${HOME}/.ecitadel"
+mkdir -p "$WORKDIR"
+chmod 700 "$WORKDIR" 2>/dev/null || true
+OUT="${WORKDIR}/triage-$(hostname)-$(date -u +%Y%m%d-%H%M%SZ).log"
 TMP_ERR="$(mktemp)"
 trap 'rm -f "$TMP_ERR"' EXIT
 
@@ -199,5 +202,6 @@ echo "Report: $OUT"
 echo
 echo "Suggested next steps:"
 echo "  1. Copy the report off the box to your shared notes."
+echo "     ls -la $WORKDIR/"
 echo "  2. Diff against the next run with: diff prev.log this.log"
 echo "  3. Cross-check findings against docs/02-hardening.md"

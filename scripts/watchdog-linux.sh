@@ -19,9 +19,9 @@
 # Usage:
 #   nohup sudo bash watchdog-linux.sh > /dev/null 2>&1 &
 #   # to stop:
-#   kill $(cat ~/watchdog-$(hostname).pid)
+#   kill $(cat ~/.ecitadel/watchdog-$(hostname).pid)
 #
-# Outputs (in $HOME of the user running it):
+# Outputs (in ~/.ecitadel/ — created if missing, chmod 700):
 #   watchdog-<host>-baseline.txt   one-shot snapshot from first tick
 #   watchdog-<host>.log            append-only deltas, one event per line
 #   watchdog-<host>.pid            process id (so you can stop it cleanly)
@@ -37,9 +37,12 @@ export LANG
 
 HOST="$(hostname)"
 INTERVAL="${WD_INTERVAL:-60}"
-BASELINE_FILE="${HOME}/watchdog-${HOST}-baseline.txt"
-LOG_FILE="${HOME}/watchdog-${HOST}.log"
-PID_FILE="${HOME}/watchdog-${HOST}.pid"
+WORKDIR="${HOME}/.ecitadel"
+mkdir -p "$WORKDIR"
+chmod 700 "$WORKDIR" 2>/dev/null || true
+BASELINE_FILE="${WORKDIR}/watchdog-${HOST}-baseline.txt"
+LOG_FILE="${WORKDIR}/watchdog-${HOST}.log"
+PID_FILE="${WORKDIR}/watchdog-${HOST}.pid"
 
 # --- pidfile / single-instance --------------------------------------
 if [ -f "$PID_FILE" ] && kill -0 "$(cat "$PID_FILE")" 2>/dev/null; then

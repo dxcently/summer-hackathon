@@ -2,6 +2,8 @@
 
 First-run triage scripts. All read-only. Run these immediately after T+0 on each box (and from your laptop) to capture a known-state baseline before you change anything. Re-run later in the round and `diff` the two reports to spot deltas.
 
+**All scripts write outputs to a hidden workdir** (`~/.ecitadel/` on Linux/laptop, `/root/.ecitadel/` on pfSense, `%USERPROFILE%\.ecitadel\` on Windows). The dir is created on first run with `chmod 700` so a casual `ls` doesn't expose your evidence to anyone who shoulder-surfs the console. On Windows the folder is also marked Hidden. To inspect outputs: `ls -la ~/.ecitadel/`.
+
 ## When to run
 
 - **T+0 to T+15 min** (during the triage phase from `tasks/todo.md`):
@@ -21,7 +23,7 @@ Read-only triage for **Blacklist (Debian 13)** and **Concierge (Fedora 43)**. Au
 ```bash
 # On the target box, as root:
 sudo bash linux-triage.sh
-# → ~/triage-<hostname>-<utc-ts>.log
+# → ~/.ecitadel/triage-<hostname>-<utc-ts>.log
 ```
 
 Captures: users (`/etc/passwd`, `/etc/shadow`, sudoers), network (interfaces, listeners, routes), services + cron + systemd timers, persistence vectors (SUID/SGID, all `authorized_keys`, profile.d, systemd unit files), recently modified files in `/etc`, `/var/www`, `/tmp`, processes, web artifacts (webshell candidates, oversized PHP), DB listeners, SSSD/AD-join state, SELinux/AppArmor, firewall rules, sshd_config, package install log, recent journal errors, recent logins.
@@ -33,7 +35,7 @@ Read-only triage for **Cabal (Windows Server 2022 / DC + DNS for `rrintel.intern
 ```powershell
 # On Cabal, in PowerShell as Administrator:
 powershell.exe -ExecutionPolicy Bypass -File windows-triage.ps1
-# → %USERPROFILE%\triage-<computer>-<utc-ts>.log
+# → %USERPROFILE%\.ecitadel\triage-<computer>-<utc-ts>.log
 ```
 
 Captures: local users + groups, all AD users (with whenCreated, last logon, password set), AD users created in the last 7 days, Domain Admins / Enterprise Admins / Schema Admins / Administrators / Account Operators membership, AD computers, accounts with non-expiring passwords, accounts with SPNs (Kerberoast surface), running services, non-Microsoft auto-start services, non-Microsoft scheduled tasks, tasks running as SYSTEM, HKLM/HKCU Run keys + RunOnce, Win32_StartupCommand, WMI event filters + consumers + bindings, network (IP config, listeners, established connections), firewall profile state, DNS server zones + `rrintel.internal` records, SMB shares + sessions + config (SMBv1 status), interactive sessions, Defender status + preferences + threat history, recent Security events (4624 logon, 4625 failed logon, 4720 user-created, 4732/4756 group add, 7045 service install), recently modified files in `C:\ProgramData`, `C:\Users\Public`, `C:\Windows\Temp`, audit policy.
@@ -45,7 +47,7 @@ Read-only triage for **pfSense (thebox)**. Uses pfSense's `/bin/sh` — no bash 
 ```sh
 # In the pfSense console menu, choose 8 (Shell), then:
 sh /root/pfsense-triage.sh
-# → /root/triage-thebox-<utc-ts>.log
+# → /root/.ecitadel/triage-thebox-<utc-ts>.log
 ```
 
 Captures: interfaces (ifconfig, stats), pf rules + NAT rules + state table summary + first 100 states, routing table, local TCP/UDP listeners (sockstat), installed packages + running services + daemons, admin users from `config.xml`, NAT 1:1 + inbound rdr rules, recent webGUI/SSH auth events, last 100 firewall log lines, last 100 system log lines.
@@ -57,7 +59,7 @@ Probes scored services **from outside pfSense**, the way the scoring engine does
 ```bash
 # On your VPN'd operator laptop:
 bash external-check.sh 17        # replace 17 with your team number
-# → ./external-check-<utc-ts>.log
+# → ~/.ecitadel/external-check-<utc-ts>.log
 ```
 
 Checks: ICMP reachability for all three hosts, DNS from Cabal (A/SOA/NS for `rrintel.internal`, `_ldap._tcp` SRV, `_kerberos._tcp` SRV, reverse), SSH on .101/.102/.103, HTTP+HTTPS on Concierge (status, headers, TLS cert), DB ports on Blacklist (5432/3306/1433), AD/LDAP ports on Cabal (389/636/88/3389/445/53). Ends with a one-table pass/fail summary.
@@ -73,13 +75,13 @@ Observe-only background daemon for **Blacklist + Concierge**. Captures a baselin
 nohup sudo bash watchdog-linux.sh > /dev/null 2>&1 &
 
 # Tail the event log in another shell:
-tail -f ~/watchdog-$(hostname).log
+tail -f ~/.ecitadel/watchdog-$(hostname).log
 
 # Stop it cleanly:
-kill $(cat ~/watchdog-$(hostname).pid)
+kill $(cat ~/.ecitadel/watchdog-$(hostname).pid)
 ```
 
-Outputs three files in `$HOME`:
+Outputs three files in `~/.ecitadel/`:
 
 - `watchdog-<host>-baseline.txt` — snapshot from first tick (services / ports / proc counts)
 - `watchdog-<host>.log` — append-only event log, one line per change
@@ -111,13 +113,13 @@ Same idea, but for pfSense. Uses `/bin/sh` and FreeBSD's `service -e` + `socksta
 nohup sh /root/watchdog-pfsense.sh > /dev/null 2>&1 &
 
 # Tail:
-tail -f /root/watchdog-thebox.log
+tail -f /root/.ecitadel/watchdog-thebox.log
 
 # Stop:
-kill $(cat /root/watchdog-thebox.pid)
+kill $(cat /root/.ecitadel/watchdog-thebox.pid)
 ```
 
-Outputs `/root/watchdog-thebox-baseline.txt`, `/root/watchdog-thebox.log`, `/root/watchdog-thebox.pid`. Same event-type vocabulary as the Linux watchdog plus `TICK-DAEMON` (a watched daemon's process count changed).
+Outputs `/root/.ecitadel/watchdog-thebox-baseline.txt`, `/root/.ecitadel/watchdog-thebox.log`, `/root/.ecitadel/watchdog-thebox.pid`. Same event-type vocabulary as the Linux watchdog plus `TICK-DAEMON` (a watched daemon's process count changed).
 
 > **Why no Windows watchdog?** Cabal is the keystone box and gets a heavier operator touch — manual `Get-Service` / `Get-ScheduledTask` cadence plus Event Log filtering covers it. If you want a polling loop on Windows, schedule `windows-triage.ps1` via Task Scheduler at a fixed interval and `diff` the resulting `.log` files.
 
@@ -234,7 +236,7 @@ After running, you want the `.log` file on your laptop / shared notes so all own
 
 ```bash
 # from your laptop, once VPN is up:
-scp user@172.27.17.102:~/triage-concierge-*.log ~/notes/
+scp 'user@172.27.17.102:~/.ecitadel/triage-concierge-*.log' ~/notes/
 ```
 
 For Cabal, use SMB or `winrm` if you've set them up, otherwise paste from the console.

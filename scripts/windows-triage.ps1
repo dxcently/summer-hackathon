@@ -5,7 +5,7 @@ windows-triage.ps1 — read-only first-run triage for Cabal
 Usage (in PowerShell as Administrator on Cabal):
     powershell.exe -ExecutionPolicy Bypass -File windows-triage.ps1
 
-Output: $env:USERPROFILE\triage-$env:COMPUTERNAME-<utc-timestamp>.log
+Output: $env:USERPROFILE\.ecitadel\triage-$env:COMPUTERNAME-<utc-timestamp>.log
 
 This script ONLY reads. It does not change any system state.
 Safe to run multiple times; each run produces a new log file you can
@@ -17,7 +17,13 @@ diff workflow can cover all four boxes.
 
 $ErrorActionPreference = 'Continue'
 $ts  = (Get-Date).ToUniversalTime().ToString('yyyyMMdd-HHmmssZ')
-$Out = Join-Path $env:USERPROFILE "triage-$env:COMPUTERNAME-$ts.log"
+$WorkDir = Join-Path $env:USERPROFILE '.ecitadel'
+if (-not (Test-Path $WorkDir)) {
+    $null = New-Item -ItemType Directory -Path $WorkDir -Force
+    # Mark hidden so it stays out of Explorer's casual view.
+    try { (Get-Item $WorkDir).Attributes = 'Hidden' } catch { }
+}
+$Out = Join-Path $WorkDir "triage-$env:COMPUTERNAME-$ts.log"
 
 function Write-Section {
     param([string]$Title)
@@ -248,5 +254,6 @@ Write-Host "Report: $Out"
 Write-Host ""
 Write-Host "Suggested next steps:"
 Write-Host "  1. Copy the report off the box to your shared notes."
+Write-Host "     ls $WorkDir"
 Write-Host "  2. Diff against the next run with: Compare-Object (gc prev.log) (gc this.log)"
 Write-Host "  3. Cross-check findings against docs/02-hardening.md (Cabal section)"

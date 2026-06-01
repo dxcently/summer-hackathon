@@ -4,7 +4,7 @@
 # Usage (in pfSense console: option 8 → shell):
 #   sh /root/pfsense-triage.sh
 #
-# Output: /root/triage-thebox-<utc-timestamp>.log
+# Output: /root/.ecitadel/triage-thebox-<utc-timestamp>.log
 #
 # Read-only. Does not modify firewall rules, NAT, or any config.
 # Uses /bin/sh (BusyBox-ish on pfSense) — no bash features.
@@ -12,8 +12,11 @@
 LANG=C
 export LANG
 
+WORKDIR="/root/.ecitadel"
+mkdir -p "$WORKDIR"
+chmod 700 "$WORKDIR" 2>/dev/null || true
 TS=$(date -u +%Y%m%d-%H%M%SZ)
-OUT="/root/triage-thebox-${TS}.log"
+OUT="${WORKDIR}/triage-thebox-${TS}.log"
 
 section() {
     printf '\n\n=== %s ===\n' "$1" >>"$OUT"
@@ -115,5 +118,6 @@ echo "Report: $OUT"
 echo
 echo "Suggested next steps:"
 echo "  1. SCP the report off the box to your shared notes."
+echo "     ls -la $WORKDIR/"
 echo "  2. Diff against the next run with: diff prev.log this.log"
 echo "  3. Cross-check findings against docs/02-hardening.md (pfSense section)"
