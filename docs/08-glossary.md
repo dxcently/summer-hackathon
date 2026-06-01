@@ -6,7 +6,7 @@
 
 | Term | Meaning |
 |---|---|
-| **eCitadel** | The competition. Season IV is the 2026 run. CCDC-style format. |
+| **Season IV** | The competition. 2026 run. CCDC-style format. |
 | **CCDC** | Collegiate Cyber Defense Competition. The family of blue-team competitions this event copies. |
 | **Blue team** | You. The defenders. |
 | **Red team** | The organizers' offensive operators. They are *already inside your boxes* at T+0. Penalty category. |

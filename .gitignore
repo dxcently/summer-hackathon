@@ -26,12 +26,12 @@ mcp-*.log
 
 # Briefing source material (local-only)
 brief-ts-*.txt
-ecitadel-screenshots-*.png
-ecitadel-briefing-screenshots*.png
+briefing-*.png
+briefing*.png
 *.png
-eCitadel_Competition*.pdf
+S4_Competition*.pdf
 
-/eCitadel_Practice_Round_Mint21_Answer_Key.pdf
-/eCitadel_Practice_Round_Win2016_Answer_Key.pdf
-/eCitadel_Practice_Round_README.pdf
-/eCitadel_Practice_Round_Alma9_Answer_Key.pdf
+/S4_Practice_Round_Mint21_Answer_Key.pdf
+/S4_Practice_Round_Win2016_Answer_Key.pdf
+/S4_Practice_Round_README.pdf
+/S4_Practice_Round_Alma9_Answer_Key.pdf

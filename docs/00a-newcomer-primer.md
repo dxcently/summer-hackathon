@@ -1,10 +1,10 @@
 # 00a — Newcomer primer
 
-> Read this **first** if eCitadel / CCDC / blue-team competitions are new to you. Everything else in `docs/` assumes you already know the shape of the day. This doc gives you that shape.
+> Read this **first** if CCDC / blue-team competitions are new to you. Everything else in `docs/` assumes you already know the shape of the day. This doc gives you that shape.
 
 ## What kind of competition is this
 
-eCitadel is a **blue-team defense competition** in the CCDC (Collegiate Cyber Defense Competition) tradition. You are not breaking into anything. You are *defending* a small fictional company's network for a few hours while:
+This is a **blue-team defense competition** in the CCDC (Collegiate Cyber Defense Competition) tradition. You are not breaking into anything. You are *defending* a small fictional company's network for a few hours while:
 
 - A **scoring engine** constantly pokes your services from outside and gives you points for keeping them working
 - An **inject queue** drops business-memo tasks on you ("rotate all passwords", "write an account-lockout policy") that you have to complete and return as PDFs

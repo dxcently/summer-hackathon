@@ -48,7 +48,7 @@ param(
 $ErrorActionPreference = 'SilentlyContinue'
 
 # --- workdir + log --------------------------------------------------
-$WorkDir = Join-Path $env:USERPROFILE '.ecitadel'
+$WorkDir = Join-Path $env:USERPROFILE '.rrintel'
 if (-not (Test-Path $WorkDir)) {
     New-Item -ItemType Directory -Path $WorkDir -Force | Out-Null
 }
@@ -71,8 +71,8 @@ function Fail2([string]$s){ $script:fail++; Write-Line "  [FAIL]  $s" }
 function Info2([string]$s){                Write-Line "  [info]  $s" }
 
 # --- header ---------------------------------------------------------
-Set-Content -Path $out -Value "eCitadel policy audit (windows)"
-Write-Host "eCitadel policy audit (windows)"
+Set-Content -Path $out -Value "Season IV policy audit (windows)"
+Write-Host "Season IV policy audit (windows)"
 Write-Line "host:    $env:COMPUTERNAME"
 Write-Line "utc:     $((Get-Date).ToUniversalTime().ToString('s'))Z"
 Write-Line "user:    $env:USERNAME"

@@ -14,7 +14,7 @@
 #
 # Usage:
 #   bash compare-triage.sh prev.log curr.log
-#   bash compare-triage.sh '~/.ecitadel/triage-blacklist-*.log'   # auto last 2
+#   bash compare-triage.sh '~/.rrintel/triage-blacklist-*.log'   # auto last 2
 #
 # Tips:
 #   - Pipe through `less -R` to keep the colour

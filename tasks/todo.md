@@ -1,4 +1,4 @@
-# eCitadel Season IV — Competition Plan
+# Season IV — Competition Plan
 
 > RR Intel network. 6h + 5min grace. CCS 20% + Injects 35% + Services 35% + Orange 10%.
 > Red team is a penalty category (subtractive). Assume pre-planted malware on every box.
@@ -60,7 +60,7 @@
 **Goal:** map the boxes, snapshot reality, stop bleeding. No password changes yet.
 
 - [ ] Each box owner: log in via web console, capture baseline
-  - Run the canned snapshot: `linux-triage.sh` / `windows-triage.ps1` / `pfsense-triage.sh` (writes a tarball to `~/.ecitadel/`)
+  - Run the canned snapshot: `linux-triage.sh` / `windows-triage.ps1` / `pfsense-triage.sh` (writes a tarball to `~/.rrintel/`)
   - users (`/etc/passwd`, `net user`, `Get-LocalUser`, `Get-ADUser -Filter *`)
   - listening ports (`ss -tlnp`, `netstat -ano`)
   - running services (`systemctl list-units --type=service`, `Get-Service`)
@@ -112,7 +112,7 @@
 
 **Per-box hardening — pick high-value items only, see `docs/02-hardening.md` and the per-OS checklists below:**
 - [ ] Debian (Blacklist / DB) — see **Linux checklist**
-  - First: `sudo bash scripts/harden/harden-linux.sh --dry-run` then apply (login.defs, pwquality, sshd, sysctl, cron.allow, shadow perms — auto-backed up to `~/.ecitadel/backups/`)
+  - First: `sudo bash scripts/harden/harden-linux.sh --dry-run` then apply (login.defs, pwquality, sshd, sysctl, cron.allow, shadow perms — auto-backed up to `~/.rrintel/backups/`)
   - DB users: drop guest/anonymous, rotate `root`/admin, restrict bind to LAN
   - UFW or nftables: deny inbound except scored ports + LAN admin (script intentionally does NOT touch firewall — confirm scored ports first)
   - `apt update && apt upgrade -y` only if you can roll back via revert if something breaks
@@ -182,7 +182,7 @@ Cross-reference with `scripts/triage/check-policy-linux.sh` output. Items marked
 - [ ] **DO NOT** flip `PasswordAuthentication no` mid-round unless you've confirmed the scoring engine uses keys
 - [ ] Every user's `~/.ssh/authorized_keys` reviewed — back up before pruning rogue keys
 
-**Kernel / network (`/etc/sysctl.d/99-ecitadel-harden.conf`)**
+**Kernel / network (`/etc/sysctl.d/99-rrintel-harden.conf`)**
 - [ ] `net.ipv4.tcp_syncookies = 1`
 - [ ] `net.ipv4.conf.all.rp_filter = 1`
 - [ ] `net.ipv4.conf.all.accept_redirects = 0`, `send_redirects = 0`
@@ -199,7 +199,7 @@ Cross-reference with `scripts/triage/check-policy-linux.sh` output. Items marked
 
 **Filesystem / forensics**
 - [ ] `/etc/shadow` and `/etc/gshadow` are `640 root:shadow` (or `000`)
-- [ ] SUID list saved as baseline (`find / -perm -4000 -type f 2>/dev/null > ~/.ecitadel/suid-baseline.txt`)
+- [ ] SUID list saved as baseline (`find / -perm -4000 -type f 2>/dev/null > ~/.rrintel/suid-baseline.txt`)
 - [ ] `find /tmp /var/tmp /dev/shm -type f -mtime -1` — recent drops in world-writable dirs
 - [ ] `find / -name '.*' -mtime -1 2>/dev/null` — hidden recent files
 - [ ] `ls -la /root /home/*` for stray scripts / authorized_keys / .bashrc backdoors

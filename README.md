@@ -1,6 +1,6 @@
-# eCitadel Season IV — RR Intel Task Force
+# Season IV — RR Intel Task Force
 
-Personal prep workspace for the eCitadel S4 blue-team competition (CCS-style: find/fix vulns + scored services + injects + orange team + red team penalty).
+Personal prep workspace for the S4 blue-team competition (CCS-style: find/fix vulns + scored services + injects + orange team + red team penalty).
 
 ## Start here
 
@@ -25,19 +25,19 @@ Personal prep workspace for the eCitadel S4 blue-team competition (CCS-style: fi
 
 All read-only, organized by lifecycle phase. See `scripts/README.md` for the full operator guide (cadence, diffing, evidence handling).
 
-- `scripts/bootstrap/` — first-run setup. `bootstrap-debian.sh` (Blacklist), `bootstrap-fedora.sh` (Concierge). Installs a FOSS toolkit, creates `~/.ecitadel/`, stages the triage + watchdog scripts. Windows + pfSense are manual checklists in `scripts/bootstrap/README.md`
+- `scripts/bootstrap/` — first-run setup. `bootstrap-debian.sh` (Blacklist), `bootstrap-fedora.sh` (Concierge). Installs a FOSS toolkit, creates `~/.rrintel/`, stages the triage + watchdog scripts. Windows + pfSense are manual checklists in `scripts/bootstrap/README.md`
 - `scripts/triage/` — read-only state captures. `linux-triage.sh`, `windows-triage.ps1`, `pfsense-triage.sh` for per-box baselines; `external-check.sh` for outside-pfSense probing; `first-run-checks.sh` for a 60-second sanity sweep post-bootstrap; `check-network.sh` / `check-services.sh` for focused re-checks; `compare-triage.sh` to diff two triage logs with PID/timestamp noise stripped; `ir-capture.sh` for full evidence packs on a suspect PID *before* you kill it
 - `scripts/watchdog/` — observe-only background daemons. `watchdog-linux.sh`, `watchdog-pfsense.sh`. Baseline once, log only deltas. Never modifies state
 
-All outputs land in a hidden workdir (`~/.ecitadel/` on Linux, `/root/.ecitadel/` on pfSense, `%USERPROFILE%\.ecitadel\` on Windows) with `chmod 700`.
+All outputs land in a hidden workdir (`~/.rrintel/` on Linux, `/root/.rrintel/` on pfSense, `%USERPROFILE%\.rrintel\` on Windows) with `chmod 700`.
 
 ## Source material
 
-- `eCitadel_Competition_Orientation.pdf` — official orientation deck
-- `eCitadel_Practice_Round_README.pdf` — practice round brief
-- `eCitadel_Practice_Round_Mint21_Answer_Key.pdf`, `…_Alma9_Answer_Key.pdf`, `…_Win2016_Answer_Key.pdf` — practice answer keys. **Don't read until you've worked the box.** Walkthrough methodology lives in `docs/09-practice-round-walkthrough.md`
+- `S4_Orientation.pdf` — official orientation deck
+- `S4_Practice_Round_README.pdf` — practice round brief
+- `S4_Practice_Round_Mint21_Answer_Key.pdf`, `…_Alma9_Answer_Key.pdf`, `…_Win2016_Answer_Key.pdf` — practice answer keys. **Don't read until you've worked the box.** Walkthrough methodology lives in `docs/09-practice-round-walkthrough.md`
 - `brief-ts-1.txt`, `brief-ts-2.txt`, `brief-ts-3.txt` — auto-captured briefing transcript
-- `ecitadel-screenshots-01.png` … `08.png` — briefing slides (note: numbered in reverse, 08 = first slide chronologically)
+- `briefing-01.png` … `08.png` — briefing slides (note: numbered in reverse, 08 = first slide chronologically)
 
 ## Constraints to remember
 

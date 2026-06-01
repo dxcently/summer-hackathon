@@ -31,7 +31,7 @@
 set -u
 LANG=C; export LANG
 
-WORKDIR="${HOME}/.ecitadel"
+WORKDIR="${HOME}/.rrintel"
 mkdir -p "$WORKDIR" 2>/dev/null || true
 chmod 700 "$WORKDIR" 2>/dev/null || true
 
@@ -60,7 +60,7 @@ info() { printf '  [info]  %s\n' "$*" | tee -a "$OUT"; }
 
 # --- header ---------------------------------------------------------
 {
-    echo "eCitadel policy audit (linux)"
+    echo "Season IV policy audit (linux)"
     echo "host:      $(hostname)"
     echo "utc:       $(date -u)"
     echo "distro:    $(. /etc/os-release 2>/dev/null && echo "${PRETTY_NAME:-unknown}")"

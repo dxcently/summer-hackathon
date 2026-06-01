@@ -22,7 +22,7 @@
 #   bash ir-capture.sh <PID>
 #   TCPDUMP=1 sudo bash ir-capture.sh <PID>
 #
-# Output: ~/.ecitadel/evidence/<utc-ts>-pid<N>/
+# Output: ~/.rrintel/evidence/<utc-ts>-pid<N>/
 #
 # Read-mostly. The only writes are to the evidence dir.
 
@@ -39,7 +39,7 @@ if [ ! -d "/proc/$PID" ]; then
     exit 1
 fi
 
-WORKDIR="${HOME}/.ecitadel"
+WORKDIR="${HOME}/.rrintel"
 mkdir -p "${WORKDIR}/evidence"
 chmod 700 "$WORKDIR" 2>/dev/null || true
 

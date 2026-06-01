@@ -13,7 +13,7 @@
 #                                  MaxAuthTries 4, LoginGraceTime 30,
 #                                  ClientAlive*, X11Forwarding no,
 #                                  UsePAM yes
-#   4. /etc/sysctl.d/99-ecitadel-harden.conf — kernel + network safety
+#   4. /etc/sysctl.d/99-rrintel-harden.conf — kernel + network safety
 #                                  (rp_filter, accept_redirects=0,
 #                                  syncookies=1, kptr_restrict=2,
 #                                  yama.ptrace_scope=1, etc.)
@@ -34,11 +34,11 @@
 #   - Remove SUID bits. Breaking sudo/su/passwd/mount makes the box
 #     unrepairable mid-round.
 #   - Touch existing /etc/sysctl.conf — we drop our settings in a NEW
-#     file at /etc/sysctl.d/99-ecitadel-harden.conf so we don't fight
+#     file at /etc/sysctl.d/99-rrintel-harden.conf so we don't fight
 #     vendor or operator overrides.
 #
 # Every edited file is backed up to:
-#   ~/.ecitadel/backups/<utc-ts>/<original-absolute-path>
+#   ~/.rrintel/backups/<utc-ts>/<original-absolute-path>
 #
 # Usage (as root):
 #   sudo bash harden-linux.sh --dry-run
@@ -84,7 +84,7 @@ DO_CRON="${DO_CRON:-1}"
 DO_PERMS="${DO_PERMS:-1}"
 
 # --- workdir + log --------------------------------------------------
-WORKDIR="${HOME}/.ecitadel"
+WORKDIR="${HOME}/.rrintel"
 mkdir -p "$WORKDIR" 2>/dev/null || true
 chmod 700 "$WORKDIR" 2>/dev/null || true
 
@@ -110,7 +110,7 @@ info()      { printf '  [info]  %s\n' "$*" | tee -a "$OUT"; }
 
 # --- header ---------------------------------------------------------
 {
-    echo "eCitadel Linux hardening"
+    echo "Season IV Linux hardening"
     echo "host:    $(hostname)"
     echo "utc:     $(date -u)"
     echo "distro:  $(. /etc/os-release 2>/dev/null && echo "${PRETTY_NAME:-unknown}")"
@@ -314,14 +314,14 @@ if [ "$DO_SSHD" = "1" ]; then
     fi
 fi
 
-# --- 4. /etc/sysctl.d/99-ecitadel-harden.conf ----------------------
+# --- 4. /etc/sysctl.d/99-rrintel-harden.conf ----------------------
 if [ "$DO_SYSCTL" = "1" ]; then
     section 'sysctl'
 
-    SCTL=/etc/sysctl.d/99-ecitadel-harden.conf
+    SCTL=/etc/sysctl.d/99-rrintel-harden.conf
 
     DESIRED=$(cat <<'EOF'
-# eCitadel hardening — written by harden-linux.sh
+# Season IV hardening — written by harden-linux.sh
 # Network anti-spoofing
 net.ipv4.conf.all.rp_filter = 1
 net.ipv4.conf.default.rp_filter = 1

@@ -23,7 +23,7 @@
 set -u
 LANG=C; export LANG
 
-WORKDIR="${HOME}/.ecitadel"
+WORKDIR="${HOME}/.rrintel"
 mkdir -p "$WORKDIR" 2>/dev/null || true
 chmod 700 "$WORKDIR" 2>/dev/null || true
 
@@ -46,7 +46,7 @@ info() { printf '  [info]  %s\n' "$*" | tee -a "$OUT"; }
 
 # --- header ---------------------------------------------------------
 {
-    echo "eCitadel first-run health check"
+    echo "Season IV first-run health check"
     echo "host:      $(hostname)"
     echo "utc:       $(date -u)"
     echo "kernel:    $(uname -r)"

@@ -7,7 +7,7 @@
 # Usage (as root, on the box):
 #   sudo bash linux-triage.sh
 #
-# Output: ~/.ecitadel/triage-<host>-<timestamp>.log
+# Output: ~/.rrintel/triage-<host>-<timestamp>.log
 #
 # This script ONLY reads. It does not change any system state.
 # Safe to run multiple times; each run produces a new log file you can
@@ -17,7 +17,7 @@ set -u
 LANG=C
 export LANG
 
-WORKDIR="${HOME}/.ecitadel"
+WORKDIR="${HOME}/.rrintel"
 mkdir -p "$WORKDIR"
 chmod 700 "$WORKDIR" 2>/dev/null || true
 OUT="${WORKDIR}/triage-$(hostname)-$(date -u +%Y%m%d-%H%M%SZ).log"
@@ -50,7 +50,7 @@ run_sh() {
 }
 
 {
-    printf 'eCitadel triage report\n'
+    printf 'Season IV triage report\n'
     printf 'host:      %s\n' "$(hostname)"
     printf 'utc:       %s\n' "$(date -u)"
     printf 'kernel:    %s\n' "$(uname -a)"

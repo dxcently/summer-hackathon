@@ -74,4 +74,4 @@
 
 ---
 
-> Generated for eCitadel S4 / RR Intel Task Force. Submitted via portal.
+> Generated for Season IV / RR Intel Task Force. Submitted via portal.

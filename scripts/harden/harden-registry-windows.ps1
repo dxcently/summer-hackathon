@@ -57,7 +57,7 @@ param(
 $ErrorActionPreference = 'Stop'
 
 # --- workdir + log -------------------------------------------------
-$WorkDir = Join-Path $env:USERPROFILE '.ecitadel'
+$WorkDir = Join-Path $env:USERPROFILE '.rrintel'
 if (-not (Test-Path $WorkDir)) {
     New-Item -ItemType Directory -Path $WorkDir -Force | Out-Null
 }
@@ -74,8 +74,8 @@ function Write-Line([string]$line) {
 }
 
 # --- header ---------------------------------------------------------
-Set-Content -Path $out -Value "eCitadel registry hardening"
-Write-Host "eCitadel registry hardening"
+Set-Content -Path $out -Value "Season IV registry hardening"
+Write-Host "Season IV registry hardening"
 Write-Line "host:    $env:COMPUTERNAME"
 Write-Line "utc:     $((Get-Date).ToUniversalTime().ToString('s'))Z"
 Write-Line "user:    $env:USERNAME"

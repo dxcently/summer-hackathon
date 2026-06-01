@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # bootstrap-fedora.sh — first-run setup for Concierge (Fedora 43,
 # the real comp's web server). Installs FOSS admin + forensics
-# tools, creates the ~/.ecitadel workdir, and stages the triage and
+# tools, creates the ~/.rrintel workdir, and stages the triage and
 # watchdog scripts if they're sitting next to this bootstrap.
 #
 # Tools installed are limited to what does NOT trip CCS "prohibited
@@ -26,7 +26,7 @@ fi
 
 REAL_USER="${SUDO_USER:-$USER}"
 REAL_HOME="$(getent passwd "$REAL_USER" | cut -d: -f6)"
-WORKDIR="${REAL_HOME}/.ecitadel"
+WORKDIR="${REAL_HOME}/.rrintel"
 
 # detect Alma vs Fedora for repo behaviour
 ID_LIKE=""
@@ -137,12 +137,12 @@ echo "Workdir:     ${WORKDIR}/"
 echo "Tools added: see /var/log/dnf.log for the install record"
 echo
 echo "Next steps (run as ${REAL_USER}, not root):"
-echo "  cd ~/.ecitadel"
+echo "  cd ~/.rrintel"
 echo "  bash bin/linux-triage.sh         # capture baseline"
 echo "  nohup bash bin/watchdog-linux.sh &  # background watchdog"
 echo
 echo "Notes:"
-echo "  - All output writes to ~/.ecitadel/ (hidden, chmod 700)"
+echo "  - All output writes to ~/.rrintel/ (hidden, chmod 700)"
 echo "  - nmap and wireshark were INTENTIONALLY skipped (CCS-flagged)"
 echo "  - ncat is gated behind nmap-ncat — also skipped. Use socat."
 echo "  - SELinux is on. Leave it enforcing."

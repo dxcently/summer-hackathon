@@ -53,7 +53,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$WorkDir = Join-Path $env:USERPROFILE '.ecitadel'
+$WorkDir = Join-Path $env:USERPROFILE '.rrintel'
 if (-not (Test-Path $WorkDir)) {
     New-Item -ItemType Directory -Path $WorkDir -Force | Out-Null
 }
@@ -74,8 +74,8 @@ function Mark-Dry([string]$s)  {                    Write-Line "  [DRY ]  $s" }
 function Mark-Fail([string]$s) { $script:failed++;  Write-Line "  [FAIL]  $s" }
 function Section([string]$s)   { Write-Line ""; Write-Line "=== $s ===" }
 
-Set-Content -Path $out -Value "eCitadel accounts hardening"
-Write-Host "eCitadel accounts hardening"
+Set-Content -Path $out -Value "Season IV accounts hardening"
+Write-Host "Season IV accounts hardening"
 Write-Line "host:    $env:COMPUTERNAME"
 Write-Line "utc:     $((Get-Date).ToUniversalTime().ToString('s'))Z"
 Write-Line "user:    $env:USERNAME"

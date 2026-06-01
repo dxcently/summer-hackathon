@@ -5,7 +5,7 @@ windows-triage.ps1 — read-only first-run triage for Cabal
 Usage (in PowerShell as Administrator on Cabal):
     powershell.exe -ExecutionPolicy Bypass -File windows-triage.ps1
 
-Output: $env:USERPROFILE\.ecitadel\triage-$env:COMPUTERNAME-<utc-timestamp>.log
+Output: $env:USERPROFILE\.rrintel\triage-$env:COMPUTERNAME-<utc-timestamp>.log
 
 This script ONLY reads. It does not change any system state.
 Safe to run multiple times; each run produces a new log file you can
@@ -17,7 +17,7 @@ diff workflow can cover all four boxes.
 
 $ErrorActionPreference = 'Continue'
 $ts  = (Get-Date).ToUniversalTime().ToString('yyyyMMdd-HHmmssZ')
-$WorkDir = Join-Path $env:USERPROFILE '.ecitadel'
+$WorkDir = Join-Path $env:USERPROFILE '.rrintel'
 if (-not (Test-Path $WorkDir)) {
     $null = New-Item -ItemType Directory -Path $WorkDir -Force
     # Mark hidden so it stays out of Explorer's casual view.
@@ -51,7 +51,7 @@ $os       = Get-CimInstance Win32_OperatingSystem
 $uptimeHr = [math]::Round(((Get-Date) - $os.LastBootUpTime).TotalHours, 1)
 $isAdmin  = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 @(
-    "eCitadel triage report"
+    "Season IV triage report"
     "host:        $env:COMPUTERNAME"
     "utc:         $((Get-Date).ToUniversalTime())"
     "os:          $($os.Caption) ($($os.Version))"

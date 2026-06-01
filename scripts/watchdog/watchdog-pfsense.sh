@@ -9,9 +9,9 @@
 # Usage (pfSense console option 8 → shell):
 #   nohup sh /root/watchdog-pfsense.sh > /dev/null 2>&1 &
 #   # to stop:
-#   kill $(cat /root/.ecitadel/watchdog-thebox.pid)
+#   kill $(cat /root/.rrintel/watchdog-thebox.pid)
 #
-# Outputs (in /root/.ecitadel/ — created if missing, chmod 700):
+# Outputs (in /root/.rrintel/ — created if missing, chmod 700):
 #   watchdog-thebox-baseline.txt
 #   watchdog-thebox.log
 #   watchdog-thebox.pid
@@ -24,7 +24,7 @@ export LANG
 
 HOST="thebox"
 INTERVAL="${WD_INTERVAL:-60}"
-WORKDIR="/root/.ecitadel"
+WORKDIR="/root/.rrintel"
 mkdir -p "$WORKDIR"
 chmod 700 "$WORKDIR" 2>/dev/null || true
 BASELINE_FILE="${WORKDIR}/watchdog-${HOST}-baseline.txt"

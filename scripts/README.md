@@ -1,6 +1,6 @@
 # scripts/
 
-Read-only operator toolkit for the eCitadel round. Three lifecycle dirs:
+Read-only operator toolkit for the S4 round. Three lifecycle dirs:
 
 ```
 scripts/
@@ -14,7 +14,7 @@ scripts/
 
 **`harden/` is the only place that writes state**, and only when the operator opts in. Each script supports `-DryRun`, verifies every change after applying, is idempotent on re-run, and refuses operations that would break scored services (no firewall edits, no mass password reset, no RDP disable, no Administrator disable without a verified replacement admin).
 
-**All scripts write to a hidden workdir** (`~/.ecitadel/` on Linux/laptop, `/root/.ecitadel/` on pfSense, `%USERPROFILE%\.ecitadel\` on Windows). The dir is created `chmod 700` so a casual `ls` doesn't expose your evidence to anyone who shoulder-surfs the console. On Windows the folder is also marked Hidden. To inspect: `ls -la ~/.ecitadel/`.
+**All scripts write to a hidden workdir** (`~/.rrintel/` on Linux/laptop, `/root/.rrintel/` on pfSense, `%USERPROFILE%\.rrintel\` on Windows). The dir is created `chmod 700` so a casual `ls` doesn't expose your evidence to anyone who shoulder-surfs the console. On Windows the folder is also marked Hidden. To inspect: `ls -la ~/.rrintel/`.
 
 ---
 
@@ -32,7 +32,7 @@ bash scripts/triage/check-services.sh 17     # team 17 — should print all FAIL
 
 ### Phase 1 — bootstrap (T+0 to T+5 per box)
 
-One-shot. Installs toolkit, creates `~/.ecitadel/{bin,evidence,notes}`, copies `linux-triage.sh` + `watchdog-linux.sh` into `~/.ecitadel/bin/`.
+One-shot. Installs toolkit, creates `~/.rrintel/{bin,evidence,notes}`, copies `linux-triage.sh` + `watchdog-linux.sh` into `~/.rrintel/bin/`.
 
 ```bash
 # Blacklist (Debian 13)
@@ -50,7 +50,7 @@ Windows + pfSense are manual checklists — see `scripts/bootstrap/README.md`.
 
 ```bash
 bash scripts/triage/first-run-checks.sh
-# → ~/.ecitadel/firstrun-<host>-<ts>.log + pass/warn/fail summary
+# → ~/.rrintel/firstrun-<host>-<ts>.log + pass/warn/fail summary
 ```
 
 If `first-run-checks.sh` reports hard failures (DC unreachable, clock skew > 5min, root disk > 90%) — fix those first. A full triage on a broken box just produces a broken log.
@@ -61,7 +61,7 @@ This is the **ground-truth snapshot**. Every later diff is against this run.
 
 ```bash
 # Linux boxes
-sudo bash ~/.ecitadel/bin/linux-triage.sh           # or scripts/triage/linux-triage.sh
+sudo bash ~/.rrintel/bin/linux-triage.sh           # or scripts/triage/linux-triage.sh
 
 # Windows (Cabal)
 powershell.exe -ExecutionPolicy Bypass -File scripts/triage/windows-triage.ps1
@@ -81,7 +81,7 @@ Background daemon. Captures baseline, then logs only **deltas** every 60s.
 
 ```bash
 # Linux
-nohup sudo bash ~/.ecitadel/bin/watchdog-linux.sh > /dev/null 2>&1 &
+nohup sudo bash ~/.rrintel/bin/watchdog-linux.sh > /dev/null 2>&1 &
 
 # pfSense
 nohup sh scripts/watchdog/watchdog-pfsense.sh > /dev/null 2>&1 &
@@ -106,8 +106,8 @@ bash scripts/triage/check-services.sh 17
 Re-run the full triage and diff against the last one. The watchdog catches state changes in real time; the periodic re-triage catches everything the watchdog doesn't monitor (file changes in `/etc`, new sudoers entries, new SUID binaries).
 
 ```bash
-sudo bash ~/.ecitadel/bin/linux-triage.sh
-bash scripts/triage/compare-triage.sh '~/.ecitadel/triage-blacklist-*.log'
+sudo bash ~/.rrintel/bin/linux-triage.sh
+bash scripts/triage/compare-triage.sh '~/.rrintel/triage-blacklist-*.log'
 ```
 
 ### Phase 7 — IR capture (only when you find something)
@@ -116,7 +116,7 @@ You found a suspicious PID. Snapshot evidence **before** you kill it.
 
 ```bash
 sudo bash scripts/triage/ir-capture.sh <PID>
-# → ~/.ecitadel/evidence/<utc-ts>-pid<N>/  (binary, hash, network, persistence, recent files)
+# → ~/.rrintel/evidence/<utc-ts>-pid<N>/  (binary, hash, network, persistence, recent files)
 
 # THEN, after you have the evidence pack:
 sudo kill -9 <PID>
@@ -130,7 +130,7 @@ sudo kill -9 <PID>
 
 #### `bootstrap-debian.sh` / `bootstrap-fedora.sh`
 
-Install a FOSS toolkit, create `~/.ecitadel/{bin,evidence,notes}`, stage triage + watchdog scripts. **Both must be run as root via `sudo`.** Resolves `$SUDO_USER` to own files correctly. See `scripts/bootstrap/README.md` for the full package list, optional flags (`TEXLIVE=1`, `NO_UPDATE=1`), and the Windows + pfSense manual checklists.
+Install a FOSS toolkit, create `~/.rrintel/{bin,evidence,notes}`, stage triage + watchdog scripts. **Both must be run as root via `sudo`.** Resolves `$SUDO_USER` to own files correctly. See `scripts/bootstrap/README.md` for the full package list, optional flags (`TEXLIVE=1`, `NO_UPDATE=1`), and the Windows + pfSense manual checklists.
 
 ### triage/
 
@@ -140,7 +140,7 @@ Read-only state capture for **Blacklist (Debian 13)** and **Concierge (Fedora 43
 
 ```bash
 sudo bash linux-triage.sh
-# → ~/.ecitadel/triage-<hostname>-<utc-ts>.log
+# → ~/.rrintel/triage-<hostname>-<utc-ts>.log
 ```
 
 Captures: users (`/etc/passwd`, `/etc/shadow`, sudoers), network (interfaces, listeners, routes), services + cron + systemd timers, persistence vectors (SUID/SGID, all `authorized_keys`, profile.d, systemd unit files), recently modified files in `/etc`, `/var/www`, `/tmp`, processes, web artifacts (webshell candidates, oversized PHP), DB listeners, SSSD/AD-join state, SELinux/AppArmor, firewall rules, sshd_config, package install log, recent journal errors, recent logins.
@@ -151,7 +151,7 @@ Read-only state capture for **Cabal (Windows Server 2022 / DC + DNS for `rrintel
 
 ```powershell
 powershell.exe -ExecutionPolicy Bypass -File windows-triage.ps1
-# → %USERPROFILE%\.ecitadel\triage-<computer>-<utc-ts>.log
+# → %USERPROFILE%\.rrintel\triage-<computer>-<utc-ts>.log
 ```
 
 Captures: local users + groups, all AD users (with whenCreated, last logon, password set), AD users created in last 7 days, Domain Admins / Enterprise Admins / Schema Admins / Administrators / Account Operators membership, AD computers, accounts with non-expiring passwords, accounts with SPNs (Kerberoast surface), running services, non-Microsoft auto-start services, non-Microsoft scheduled tasks, tasks running as SYSTEM, HKLM/HKCU Run keys + RunOnce, Win32_StartupCommand, WMI event filters + consumers + bindings, network (IP config, listeners, established connections), firewall profile state, DNS server zones + `rrintel.internal` records, SMB shares + sessions + config (SMBv1 status), interactive sessions, Defender status + preferences + threat history, recent Security events (4624 logon, 4625 failed logon, 4720 user-created, 4732/4756 group add, 7045 service install), recently modified files in `C:\ProgramData`, `C:\Users\Public`, `C:\Windows\Temp`, audit policy.
@@ -163,7 +163,7 @@ Read-only state capture for **pfSense (thebox)**. Uses pfSense's `/bin/sh` — n
 ```sh
 # pfSense console menu → 8 (Shell), then:
 sh /root/pfsense-triage.sh
-# → /root/.ecitadel/triage-thebox-<utc-ts>.log
+# → /root/.rrintel/triage-thebox-<utc-ts>.log
 ```
 
 Captures: interfaces (ifconfig, stats), pf rules + NAT rules + state table summary + first 100 states, routing table, local TCP/UDP listeners (sockstat), installed packages + running services + daemons, admin users from `config.xml`, NAT 1:1 + inbound rdr rules, recent webGUI/SSH auth events, last 100 firewall log lines, last 100 system log lines.
@@ -174,7 +174,7 @@ Probes scored services **from outside pfSense**, the way the scoring engine does
 
 ```bash
 bash external-check.sh 17        # replace 17 with your team number
-# → ~/.ecitadel/external-check-<utc-ts>.log
+# → ~/.rrintel/external-check-<utc-ts>.log
 ```
 
 Checks: ICMP reachability for all three hosts; DNS from Cabal (A/SOA/NS for `rrintel.internal`, `_ldap._tcp` SRV, `_kerberos._tcp` SRV, reverse); SSH on .101/.102/.103; HTTP+HTTPS on Concierge (status, headers, TLS cert); DB ports on Blacklist (5432/3306/1433); AD/LDAP ports on Cabal (389/636/88/3389/445/53). Ends with one-table pass/fail summary.
@@ -188,7 +188,7 @@ Checks: ICMP reachability for all three hosts; DNS from Cabal (A/SOA/NS for `rri
 ```bash
 bash first-run-checks.sh
 GW=172.21.0.150 DC=172.21.0.103 DOMAIN=rrintel.internal bash first-run-checks.sh
-# → ~/.ecitadel/firstrun-<host>-<ts>.log
+# → ~/.rrintel/firstrun-<host>-<ts>.log
 ```
 
 Checks: gateway + DC + internet ping; DNS forward + AD `_ldap._tcp` SRV; NTP sync state and clock skew vs internet (Kerberos breaks > 5 min); root disk + memory + load; available **security** updates (apt/dnf); TLS cert expiry for HTTPS scored services; hostname / FQDN / primary IP / reverse DNS sanity. Tunables: `GW`, `DC`, `DOMAIN`.
@@ -223,7 +223,7 @@ Read-only audit of password policy + account state on **Blacklist / Concierge**.
 ```bash
 sudo bash check-policy-linux.sh
 HARD_MIN_LEN=8 MIN_LEN=16 MAX_AGE_DAYS=60 sudo bash check-policy-linux.sh
-# → ~/.ecitadel/policy-<host>-<ts>.log
+# → ~/.rrintel/policy-<host>-<ts>.log
 ```
 
 Flags: `PASS_MIN_DAYS=0` (allows immediate cycling after a forced reset); `PASS_MIN_LEN` below threshold (default FAIL < 6, WARN < 14); `PASS_MAX_DAYS` > 90; `pwquality.conf` minlen + complexity credits + `enforce_for_root`; PAM stack actually wires in `pam_pwquality` and `remember=` for history; per-user `chage -l` for never-expiring passwords and `min=0`; multiple UID 0 accounts; **empty password hashes in `/etc/shadow`**; unlocked system accounts (UID 1–999 without `!`/`*` in shadow); `sshd_config` (`PermitRootLogin`, `PasswordAuthentication`, `PermitEmptyPasswords`, `MaxAuthTries`); sudoers `NOPASSWD` entries.
@@ -239,7 +239,7 @@ Same idea for **Cabal**. Audits local SAM policy via `net accounts`, AD default 
 ```powershell
 powershell.exe -ExecutionPolicy Bypass -File check-policy-windows.ps1
 .\check-policy-windows.ps1 -MinLen 16 -HardMinLen 8 -MaxAgeDays 60
-# → %USERPROFILE%\.ecitadel\policy-<COMPUTERNAME>-<ts>.log
+# → %USERPROFILE%\.rrintel\policy-<COMPUTERNAME>-<ts>.log
 ```
 
 Flags: `MinimumPasswordLength` below threshold (default FAIL < 6, WARN < 14); `MaximumPasswordAge` > 90; `MinimumPasswordAge` < 1 (allows immediate cycling); `LockoutThreshold` = 0 (no lockout — brute force open) or > 10; `PasswordHistoryLength` < 5; AD: `ComplexityEnabled=False`, `ReversibleEncryptionEnabled=True` (crypto backdoor); **Administrator (RID 500) enabled** — should be disabled and renamed; **Guest (RID 501) enabled** — should be disabled; `DefaultAccount` (RID 503) enabled; any local account with `PasswordRequired=False`; any enabled account with `PasswordNeverExpires`; `krbtgt` password age > 180 days; AD users with `PasswordNotRequired=True`; Domain Admins / Enterprise Admins membership listings; LSA `LimitBlankPasswordUse=0` and `NoLMHash=0`.
@@ -254,7 +254,7 @@ Diffs two triage logs with noise stripped (PIDs, timestamps, uptime, load averag
 
 ```bash
 bash compare-triage.sh prev.log curr.log
-bash compare-triage.sh '~/.ecitadel/triage-blacklist-*.log'   # auto-pick last 2 by mtime
+bash compare-triage.sh '~/.rrintel/triage-blacklist-*.log'   # auto-pick last 2 by mtime
 
 # Useful pipes:
 bash compare-triage.sh '...glob...' | less -R                 # keep colour
@@ -268,7 +268,7 @@ Full evidence pack for a single suspect PID. **Run before you kill the process.*
 ```bash
 bash ir-capture.sh <PID>
 TCPDUMP=1 sudo bash ir-capture.sh <PID>     # also capture 5s of pcap (needs root)
-# → ~/.ecitadel/evidence/<utc-ts>-pid<N>/
+# → ~/.rrintel/evidence/<utc-ts>-pid<N>/
 ```
 
 Captures, in order:
@@ -292,12 +292,12 @@ Observe-only background daemon for **Blacklist + Concierge**. Captures a baselin
 ```bash
 nohup sudo bash watchdog-linux.sh > /dev/null 2>&1 &
 
-tail -f ~/.ecitadel/watchdog-$(hostname).log
+tail -f ~/.rrintel/watchdog-$(hostname).log
 
-kill $(cat ~/.ecitadel/watchdog-$(hostname).pid)
+kill $(cat ~/.rrintel/watchdog-$(hostname).pid)
 ```
 
-Outputs three files in `~/.ecitadel/`:
+Outputs three files in `~/.rrintel/`:
 
 - `watchdog-<host>-baseline.txt` — snapshot from first tick
 - `watchdog-<host>.log` — append-only event log, one line per change
@@ -326,11 +326,11 @@ Same idea for pfSense. `/bin/sh` only — no bash features. Uses FreeBSD `servic
 
 ```sh
 nohup sh /root/watchdog-pfsense.sh > /dev/null 2>&1 &
-tail -f /root/.ecitadel/watchdog-thebox.log
-kill $(cat /root/.ecitadel/watchdog-thebox.pid)
+tail -f /root/.rrintel/watchdog-thebox.log
+kill $(cat /root/.rrintel/watchdog-thebox.pid)
 ```
 
-Outputs `/root/.ecitadel/watchdog-thebox-{baseline.txt,.log,.pid}`. Same event vocabulary as Linux + `TICK-DAEMON` (a watched daemon's process count changed).
+Outputs `/root/.rrintel/watchdog-thebox-{baseline.txt,.log,.pid}`. Same event vocabulary as Linux + `TICK-DAEMON` (a watched daemon's process count changed).
 
 > **Why no Windows watchdog?** Cabal is the keystone box and gets a heavier operator touch — manual `Get-Service` / `Get-ScheduledTask` cadence plus Event Log filtering covers it. If you want a polling loop on Windows, schedule `windows-triage.ps1` via Task Scheduler at a fixed interval and `diff` the resulting `.log` files.
 
@@ -341,7 +341,7 @@ The only directory in `scripts/` that **modifies system state**. Every script in
 - Supports `-DryRun` (prints what would change, makes no edits)
 - Reads the current value before writing — if it's already at target, the write is **skipped** and counted as no-op
 - Verifies the new value after writing
-- Logs every change to `~/.ecitadel/harden-<name>-<host>-<ts>.log` (binary fingerprint of "what I changed at T+X" for the inject judge)
+- Logs every change to `~/.rrintel/harden-<name>-<host>-<ts>.log` (binary fingerprint of "what I changed at T+X" for the inject judge)
 - Is **idempotent** — re-running the same script ten times produces the same end-state and the same skip counts
 
 **What's intentionally NOT in `harden/`:**
@@ -411,14 +411,14 @@ sudo MIN_LEN=16 MAX_AGE_DAYS=45 bash harden-linux.sh
 sudo DO_SYSCTL=0 bash harden-linux.sh        # skip a section
 ```
 
-Backs up every edited file to `~/.ecitadel/backups/<utc-ts>/<original-path>` before any sed.
+Backs up every edited file to `~/.rrintel/backups/<utc-ts>/<original-path>` before any sed.
 
 Sections (each can be skipped with `DO_<SECTION>=0`):
 
 1. **`/etc/login.defs`** — `PASS_MIN_DAYS`, `PASS_MAX_DAYS`, `PASS_MIN_LEN`, `PASS_WARN_AGE`, `UMASK=027`.
 2. **`/etc/security/pwquality.conf`** — `minlen`, `dcredit=-1`, `ucredit=-1`, `lcredit=-1`, `ocredit=-1` (one of each class required), `enforce_for_root=1`, `dictcheck=1`, `retry=3`.
 3. **`/etc/ssh/sshd_config`** — `PermitRootLogin no`, `PermitEmptyPasswords no`, `MaxAuthTries 4`, `LoginGraceTime 30`, `ClientAliveInterval 300`, `ClientAliveCountMax 2`, `X11Forwarding no`, `UsePAM yes`, `IgnoreRhosts yes`, `HostbasedAuthentication no`. **Runs `sshd -t` before telling you to reload.** Does NOT touch `PasswordAuthentication` or `PubkeyAuthentication` — the scoring engine likely uses passwords.
-4. **`/etc/sysctl.d/99-ecitadel-harden.conf`** — drops into a *new* file (does not edit `/etc/sysctl.conf`): `rp_filter=1`, `accept_redirects=0`, `send_redirects=0`, `accept_source_route=0`, `log_martians=1`, `icmp_echo_ignore_broadcasts=1`, `tcp_syncookies=1`, `kernel.dmesg_restrict=1`, `kptr_restrict=2`, `yama.ptrace_scope=1`, `fs.suid_dumpable=0`, `randomize_va_space=2`. Applies with `sysctl --system`.
+4. **`/etc/sysctl.d/99-rrintel-harden.conf`** — drops into a *new* file (does not edit `/etc/sysctl.conf`): `rp_filter=1`, `accept_redirects=0`, `send_redirects=0`, `accept_source_route=0`, `log_martians=1`, `icmp_echo_ignore_broadcasts=1`, `tcp_syncookies=1`, `kernel.dmesg_restrict=1`, `kptr_restrict=2`, `yama.ptrace_scope=1`, `fs.suid_dumpable=0`, `randomize_va_space=2`. Applies with `sysctl --system`.
 5. **`/etc/cron.allow` + `/etc/at.allow`** — overwrite with `root` only, `chmod 600`.
 6. **`/etc/passwd` + `/etc/group` + `/etc/shadow` + `/etc/gshadow` perms** — verify safe (`644 root:root`, `640 root:shadow`, or `000`). Fix if not.
 
@@ -549,8 +549,8 @@ When the scoreboard flips red, the first instinct is "I think I changed somethin
 
 ```bash
 # from your laptop, once VPN is up:
-scp 'user@172.27.17.102:~/.ecitadel/triage-concierge-*.log' ~/notes/
-scp -r 'user@172.27.17.102:~/.ecitadel/evidence/' ~/notes/
+scp 'user@172.27.17.102:~/.rrintel/triage-concierge-*.log' ~/notes/
+scp -r 'user@172.27.17.102:~/.rrintel/evidence/' ~/notes/
 ```
 
 For Cabal, use SMB or `winrm` if you've set them up, otherwise paste from the console.

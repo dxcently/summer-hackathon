@@ -9,7 +9,7 @@
 #   bash external-check.sh 17
 #
 # Reads no local files. Writes one log to a hidden workdir in $HOME:
-#   ~/.ecitadel/external-check-<utc-timestamp>.log
+#   ~/.rrintel/external-check-<utc-timestamp>.log
 #
 # Read-only. Does not modify any remote system. Probes only your own
 # team's external /24 (172.27.<team>.0/24) — NEVER point this at another
@@ -36,7 +36,7 @@ WEB="${BASE}.102"
 DB="${BASE}.101"
 DOMAIN='rrintel.internal'
 
-WORKDIR="${HOME}/.ecitadel"
+WORKDIR="${HOME}/.rrintel"
 mkdir -p "$WORKDIR"
 chmod 700 "$WORKDIR" 2>/dev/null || true
 TS=$(date -u +%Y%m%d-%H%M%SZ)
@@ -60,7 +60,7 @@ run_sh() {
 }
 
 {
-    printf 'eCitadel external scored-service check\n'
+    printf 'Season IV external scored-service check\n'
     printf 'utc:       %s\n' "$(date -u)"
     printf 'team:      %s\n' "$TEAM"
     printf 'targets:\n'

@@ -1,6 +1,6 @@
 # scripts/bootstrap/
 
-First-run setup scripts. Run **once** per box right after T+0 (or right after WireGuard is up if you scp'd these via VPN). They install a small FOSS toolkit, create the `~/.ecitadel/` workdir, and stage the triage + watchdog scripts so you can run them with one command afterward.
+First-run setup scripts. Run **once** per box right after T+0 (or right after WireGuard is up if you scp'd these via VPN). They install a small FOSS toolkit, create the `~/.rrintel/` workdir, and stage the triage + watchdog scripts so you can run them with one command afterward.
 
 ## The four targets (real comp topology)
 
@@ -59,7 +59,7 @@ If you need nmap-style port scanning on your own LAN (in scope, in the lab, on y
 ## What gets created
 
 ```
-$HOME/.ecitadel/           chmod 700, owned by you
+$HOME/.rrintel/           chmod 700, owned by you
 ├── bin/                   triage + watchdog scripts staged here
 │   ├── linux-triage.sh
 │   └── watchdog-linux.sh
@@ -119,7 +119,7 @@ $env:Path += ';C:\ProgramData\chocolatey\bin'
 **Workdir** (matches Linux convention):
 
 ```powershell
-$WorkDir = Join-Path $env:USERPROFILE '.ecitadel'
+$WorkDir = Join-Path $env:USERPROFILE '.rrintel'
 New-Item -ItemType Directory -Path $WorkDir -Force
 (Get-Item $WorkDir).Attributes = 'Hidden'
 New-Item -ItemType Directory -Path "$WorkDir\bin","$WorkDir\evidence","$WorkDir\notes" -Force
@@ -141,26 +141,26 @@ That's it. pfSense already ships with `curl`, `git`, `htop`, `tcpdump`, `pftop`,
 **Workdir** (matches the Linux convention):
 
 ```sh
-mkdir -p /root/.ecitadel/bin /root/.ecitadel/evidence /root/.ecitadel/notes
-chmod 700 /root/.ecitadel
+mkdir -p /root/.rrintel/bin /root/.rrintel/evidence /root/.rrintel/notes
+chmod 700 /root/.rrintel
 ```
 
-Then drop `pfsense-triage.sh` and `watchdog-pfsense.sh` into `/root/.ecitadel/bin/`.
+Then drop `pfsense-triage.sh` and `watchdog-pfsense.sh` into `/root/.rrintel/bin/`.
 
 ## After the bootstrap
 
-The triage and watchdog scripts in `~/.ecitadel/bin/` are now ready. The recommended next sequence is documented in `../README.md`, but the short version:
+The triage and watchdog scripts in `~/.rrintel/bin/` are now ready. The recommended next sequence is documented in `../README.md`, but the short version:
 
 ```bash
 # 1. Baseline the box
-bash ~/.ecitadel/bin/linux-triage.sh
+bash ~/.rrintel/bin/linux-triage.sh
 
 # 2. Sanity-check that the box is healthy (see triage/first-run-checks.sh)
 bash <path-to-scripts>/triage/first-run-checks.sh
 
 # 3. Start the background watchdog
-nohup bash ~/.ecitadel/bin/watchdog-linux.sh > /dev/null 2>&1 &
+nohup bash ~/.rrintel/bin/watchdog-linux.sh > /dev/null 2>&1 &
 
 # 4. Pull baseline + log off the box for safe-keeping
-scp user@172.27.<team>.<host>:~/.ecitadel/triage-*.log ~/notes/
+scp user@172.27.<team>.<host>:~/.rrintel/triage-*.log ~/notes/
 ```

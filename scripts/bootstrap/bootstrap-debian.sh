@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # bootstrap-debian.sh — first-run setup for Blacklist (Debian 13,
 # the real comp's database server). Installs FOSS admin + forensics
-# tools, creates the ~/.ecitadel workdir, and stages the triage and
+# tools, creates the ~/.rrintel workdir, and stages the triage and
 # watchdog scripts if they're sitting next to this bootstrap.
 #
 # Tools installed are limited to what does NOT trip CCS "prohibited
@@ -27,7 +27,7 @@ fi
 # resolve the real user's home, even when invoked via sudo
 REAL_USER="${SUDO_USER:-$USER}"
 REAL_HOME="$(getent passwd "$REAL_USER" | cut -d: -f6)"
-WORKDIR="${REAL_HOME}/.ecitadel"
+WORKDIR="${REAL_HOME}/.rrintel"
 
 echo "[*] bootstrapping for ${REAL_USER} (home: ${REAL_HOME})"
 
@@ -116,11 +116,11 @@ echo "Workdir:     ${WORKDIR}/"
 echo "Tools added: see /var/log/apt/history.log for the install record"
 echo
 echo "Next steps (run as ${REAL_USER}, not root):"
-echo "  cd ~/.ecitadel"
+echo "  cd ~/.rrintel"
 echo "  bash bin/linux-triage.sh         # capture baseline"
 echo "  nohup bash bin/watchdog-linux.sh &  # background watchdog"
 echo
 echo "Notes:"
-echo "  - All output writes to ~/.ecitadel/ (hidden, chmod 700)"
+echo "  - All output writes to ~/.rrintel/ (hidden, chmod 700)"
 echo "  - nmap and wireshark were INTENTIONALLY skipped (CCS-flagged)"
 echo "  - For ad-hoc port checks, use: ss -tlnp + nc -zv <host> <port>"

@@ -4,7 +4,7 @@
 # Usage (in pfSense console: option 8 → shell):
 #   sh /root/pfsense-triage.sh
 #
-# Output: /root/.ecitadel/triage-thebox-<utc-timestamp>.log
+# Output: /root/.rrintel/triage-thebox-<utc-timestamp>.log
 #
 # Read-only. Does not modify firewall rules, NAT, or any config.
 # Uses /bin/sh (BusyBox-ish on pfSense) — no bash features.
@@ -12,7 +12,7 @@
 LANG=C
 export LANG
 
-WORKDIR="/root/.ecitadel"
+WORKDIR="/root/.rrintel"
 mkdir -p "$WORKDIR"
 chmod 700 "$WORKDIR" 2>/dev/null || true
 TS=$(date -u +%Y%m%d-%H%M%SZ)
@@ -36,7 +36,7 @@ run_sh() {
 }
 
 {
-    printf 'eCitadel pfSense triage report\n'
+    printf 'Season IV pfSense triage report\n'
     printf 'utc:       %s\n' "$(date -u)"
     printf 'host:      %s\n' "$(hostname)"
     printf 'version:   %s\n' "$(cat /etc/version 2>/dev/null)"
