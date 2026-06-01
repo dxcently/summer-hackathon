@@ -336,7 +336,7 @@ Outputs `/root/.ecitadel/watchdog-thebox-{baseline.txt,.log,.pid}`. Same event v
 
 ### harden/
 
-The only directory in `scripts/` that **modifies system state**. Windows-only. Every script in here:
+The only directory in `scripts/` that **modifies system state**. Every script in here:
 
 - Supports `-DryRun` (prints what would change, makes no edits)
 - Reads the current value before writing — if it's already at target, the write is **skipped** and counted as no-op
@@ -399,6 +399,38 @@ Sections, in order:
 5. **Built-in Administrator (RID 500)** — disable only when `-DisableBuiltInAdmin` AND `-NewAdminUser <name>` are both set. The script verifies `<name>` is actually in the local Administrators group before disabling RID 500. If the check fails, RID 500 is left alone.
 
 Tunable parameters: `-MinLen`, `-MaxAgeDays`, `-MinAgeDays`, `-History`, `-LockoutThr`, `-LockoutDur`, `-Preserve`.
+
+#### `harden-linux.sh`
+
+Linux counterpart for **Blacklist (Debian 13)** and **Concierge (Fedora 43)**. Same safety model as the Windows scripts (idempotent, `--dry-run`, verifies, logs every change).
+
+```bash
+sudo bash harden-linux.sh --dry-run
+sudo bash harden-linux.sh
+sudo MIN_LEN=16 MAX_AGE_DAYS=45 bash harden-linux.sh
+sudo DO_SYSCTL=0 bash harden-linux.sh        # skip a section
+```
+
+Backs up every edited file to `~/.ecitadel/backups/<utc-ts>/<original-path>` before any sed.
+
+Sections (each can be skipped with `DO_<SECTION>=0`):
+
+1. **`/etc/login.defs`** — `PASS_MIN_DAYS`, `PASS_MAX_DAYS`, `PASS_MIN_LEN`, `PASS_WARN_AGE`, `UMASK=027`.
+2. **`/etc/security/pwquality.conf`** — `minlen`, `dcredit=-1`, `ucredit=-1`, `lcredit=-1`, `ocredit=-1` (one of each class required), `enforce_for_root=1`, `dictcheck=1`, `retry=3`.
+3. **`/etc/ssh/sshd_config`** — `PermitRootLogin no`, `PermitEmptyPasswords no`, `MaxAuthTries 4`, `LoginGraceTime 30`, `ClientAliveInterval 300`, `ClientAliveCountMax 2`, `X11Forwarding no`, `UsePAM yes`, `IgnoreRhosts yes`, `HostbasedAuthentication no`. **Runs `sshd -t` before telling you to reload.** Does NOT touch `PasswordAuthentication` or `PubkeyAuthentication` — the scoring engine likely uses passwords.
+4. **`/etc/sysctl.d/99-ecitadel-harden.conf`** — drops into a *new* file (does not edit `/etc/sysctl.conf`): `rp_filter=1`, `accept_redirects=0`, `send_redirects=0`, `accept_source_route=0`, `log_martians=1`, `icmp_echo_ignore_broadcasts=1`, `tcp_syncookies=1`, `kernel.dmesg_restrict=1`, `kptr_restrict=2`, `yama.ptrace_scope=1`, `fs.suid_dumpable=0`, `randomize_va_space=2`. Applies with `sysctl --system`.
+5. **`/etc/cron.allow` + `/etc/at.allow`** — overwrite with `root` only, `chmod 600`.
+6. **`/etc/passwd` + `/etc/group` + `/etc/shadow` + `/etc/gshadow` perms** — verify safe (`644 root:root`, `640 root:shadow`, or `000`). Fix if not.
+
+What it deliberately **does not do** (matches the Windows safety model):
+
+- No firewall edits (would risk dropping scored SSH/HTTP/DB/AD ports).
+- No `PasswordAuthentication=no` flip (scoring engine likely needs password auth).
+- No password resets, no `chage` of individual users.
+- No service disabling.
+- No SUID-bit removal.
+
+Reload SSH manually after applying: `sudo systemctl reload sshd`. The script reminds you only if `sshd -t` validated cleanly.
 
 ---
 
@@ -500,6 +532,7 @@ Pipe that into `diff` for a focused compare.
 | Every 5-10 min | `check-network.sh` / `check-services.sh` | Cheap scoreboard / connectivity verify |
 | After baseline + after any user/policy inject | `check-policy-linux.sh` / `check-policy-windows.ps1` | Prove the policy actually took — flags weak min-length, never-expiring passwords, enabled Administrator / Guest |
 | Once, after baseline, with `-DryRun` first | `harden/harden-registry-windows.ps1` + `harden-accounts-windows.ps1` | Apply the safe Cabal hardenings (LM hash off, WDigest off, SMBv1 off, Guest disabled, password policy applied). Re-run `check-policy-windows.ps1` after to confirm |
+| Once per Linux box, after baseline, with `--dry-run` first | `harden/harden-linux.sh` | Apply login.defs / pwquality / sshd / sysctl / cron.allow / shadow-perm hardenings. Re-run `check-policy-linux.sh` after to confirm |
 | Every ~60 min | Re-run `*-triage.sh` → `compare-triage.sh` | Catches what watchdog doesn't (file changes, sudoers, SUID) |
 | Every console session | `script` / `Start-Transcript` | Post-mortem + IR evidence — "what did I do?" |
 | Before filing any IR | Fresh triage + `external-check.sh` | IR needs current evidence, not 2h-old state |
