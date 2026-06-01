@@ -60,6 +60,101 @@ Why this matters: many forensics questions ask "what was the X" — you can't an
 
 Don't bounce around. Finish a category before moving to the next. The reason: every category roughly maps to one type of CCS check, and you want to be able to tell from the score whether your action helped, hurt, or did nothing. Bouncing makes the signal noisy.
 
+## Practice injects (in parallel with the per-box work)
+
+The practice round also fires at least one inject through the team portal. Injects are independent from CCS — they have their own point pool, their own deadline, and their own grading. Check the portal periodically (every 10 min is fine for the practice round) and dispatch any new inject to a teammate.
+
+Practice injects don't require PDF submissions the way the real comp does — the system just checks whether you actually did the thing on the box. But the *workflow* you build here is the same one you'll use under PDF pressure during the real comp, so practice it intentionally.
+
+### Worked example: "New User Inject"
+
+```
+Title:    New User Inject
+Tasking:  The crewmates just hired a new employee, and you need
+          to create a new user account for them with a secure
+          password.
+Phase 1:  Create a new domain user named olive.
+Phase 2:  Assign a secure password to the user olive.
+Phase 3:  Make sure the user olive is enabled.
+```
+
+**Step 1 — Read all three phases before you click anything.**
+
+The phases are checkpoints the grader will verify. If you finish Phase 1 but skip Phase 3, the inject is wrong, even if the obvious "create the user" step is done. Newcomers do this constantly: they create the account, see it appear in the list, mark themselves done. Then it scores zero because they didn't notice Phase 3 existed.
+
+Write the phases down somewhere visible. Cross them off as you complete them.
+
+**Step 2 — Identify the box.**
+
+"Create a new *domain* user" → this is Active Directory work, not local users. AD lives on the DC. In the practice round that's `polus` (Windows Server 2016). Open the AD Users and Computers MMC there (`Run → dsa.msc`).
+
+If you create the user as a *local* user on `polus` (via `lusrmgr.msc`) instead of a *domain* user, the grader will not see it and the inject fails. Same name. Same password. Wrong place. Zero points. Read the tasking carefully and pick the right tool.
+
+**Step 3 — Phase 1: create the user.**
+
+Navigate to `crewmate.local → Users` in the left pane. Right-click `Users` → New → User. The wizard asks for First/Last name, Full name, User logon name. The literal text the grader checks is the *User logon name*. Spell it exactly as the inject specifies — `olive`, lowercase, no whitespace, no decoration. Don't add a job title, don't add a number, don't make it `Olive` with a capital. The grader does a literal match.
+
+**Step 4 — Phase 2: assign a secure password.**
+
+The wizard's next page asks for a password. "Secure" here means: meets the domain's password policy *and* isn't trivially guessable. Don't use:
+
+- The username (`olive`) — trivially weak
+- A short string (under 10 chars) — likely fails policy
+- A blank password — fails policy and is the exact thing you're being graded for *not* doing
+
+Pick something reasonable: 12+ characters, mixed case, a digit, a symbol. Write it down somewhere you can retrieve it after the round; you may need to log in as this user for verification. If the domain password policy rejects your choice, AD will tell you on the next click — pick a stronger one.
+
+You'll also see four checkboxes on this screen:
+
+- `User must change password at next logon` — usually checked by default. **Uncheck it** unless the inject specifically asks otherwise; leaving it checked means the user is in a "must change before they can do anything" state, which can trip grading scripts that try to bind as them.
+- `User cannot change password` — leave unchecked.
+- `Password never expires` — leave unchecked (max-age policy will pick it up later).
+- `Account is disabled` — **leave unchecked.** This is Phase 3.
+
+**Step 5 — Phase 3: confirm the user is enabled.**
+
+After clicking through the wizard, find `olive` back in the Users container. Look at the icon:
+
+- A normal user icon = enabled
+- A user icon with a small down-arrow overlay = disabled
+
+If you see the down-arrow, right-click → "Enable Account". Verify the icon updates.
+
+To verify programmatically (good habit — the grader uses programmatic checks):
+
+```powershell
+Get-ADUser olive -Properties Enabled,PasswordLastSet | Select Name,Enabled,PasswordLastSet
+```
+
+`Enabled` should report `True`. `PasswordLastSet` should be the time you just created the account, not `1/1/1601` (which means the password was never actually set).
+
+**Step 6 — Verify before declaring done.**
+
+```powershell
+# does the account exist with the exact logon name?
+Get-ADUser olive
+
+# is it in the Users container (i.e., a domain user) and not somewhere weird?
+Get-ADUser olive -Properties DistinguishedName | Select DistinguishedName
+
+# is it enabled?
+(Get-ADUser olive).Enabled
+
+# can you actually authenticate?
+# (optional, but a great sanity check — try to RDP in as olive on a non-DC box)
+```
+
+If all four come back the way you expect: inject done. Mark it off in your notes.
+
+### Inject workflow lessons (apply to every inject, practice or real)
+
+- **Phases are not suggestions.** Each phase is independently scored. Miss one, lose the points for one even if the others land.
+- **Match the literal text.** Names, paths, values — if the inject says `olive`, use `olive`. Not `Olive`, not `olive1`, not `olive@crewmate.local`.
+- **Verify after each phase, not just at the end.** A single PowerShell line confirming the state is cheap and stops the "I thought I clicked the right thing" failure mode.
+- **Time-box hard.** If a practice inject would take you 45 minutes, the real-comp equivalent takes 45 minutes and you have 4–6 other injects in flight. Build the speed muscle now.
+
+The real comp inject workflow adds two layers on top of this: a PDF response per inject (see `docs/03-injects.md` for the worked example) and a writer/owner role split. The technical execution is the same.
+
 ## 1. Forensics questions
 
 There will be one or more files named something like `Forensics Question 1` on the Desktop (Windows / Mint) or in your home directory (Alma). Open every one and read it before you touch anything else on the box.
