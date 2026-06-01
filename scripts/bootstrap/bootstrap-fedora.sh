@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# bootstrap-fedora.sh — first-run setup for RHEL-family boxes
-# (Fedora 43 / Alma Linux 9). Installs FOSS admin + forensics tools,
-# creates the ~/.ecitadel workdir, and stages the triage/watchdog
-# scripts if they're sitting next to this bootstrap.
+# bootstrap-fedora.sh — first-run setup for Concierge (Fedora 43,
+# the real comp's web server). Installs FOSS admin + forensics
+# tools, creates the ~/.ecitadel workdir, and stages the triage and
+# watchdog scripts if they're sitting next to this bootstrap.
 #
 # Tools installed are limited to what does NOT trip CCS "prohibited
 # software" checks. Notably we DO NOT install nmap, wireshark, or
-# masscan — those are flagged in the practice round answer keys.
+# masscan — those are CCDC/CyberPatriot-flagged staples that score
+# negative for being present on a defender box.
 #
 # Usage:
 #   sudo bash bootstrap-fedora.sh

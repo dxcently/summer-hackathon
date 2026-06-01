@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# bootstrap-debian.sh — first-run setup for Debian-family boxes
-# (Debian 13 / Linux Mint 21). Installs FOSS admin + forensics tools,
-# creates the ~/.ecitadel workdir, and stages the triage/watchdog
-# scripts if they're sitting next to this bootstrap.
+# bootstrap-debian.sh — first-run setup for Blacklist (Debian 13,
+# the real comp's database server). Installs FOSS admin + forensics
+# tools, creates the ~/.ecitadel workdir, and stages the triage and
+# watchdog scripts if they're sitting next to this bootstrap.
 #
 # Tools installed are limited to what does NOT trip CCS "prohibited
 # software" checks. Notably we DO NOT install nmap, wireshark, or
-# masscan — those are flagged in the practice round answer keys.
+# masscan — those are CCDC/CyberPatriot-flagged staples that score
+# negative for being present on a defender box.
 #
 # Usage:
 #   sudo bash bootstrap-debian.sh

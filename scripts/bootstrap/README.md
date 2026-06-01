@@ -2,33 +2,32 @@
 
 First-run setup scripts. Run **once** per box right after T+0 (or right after WireGuard is up if you scp'd these via VPN). They install a small FOSS toolkit, create the `~/.ecitadel/` workdir, and stage the triage + watchdog scripts so you can run them with one command afterward.
 
-## The four targets
+## The four targets (real comp topology)
 
-| OS | Script | Status |
-|---|---|---|
-| Debian 13 / Linux Mint 21 | `bootstrap-debian.sh` | included |
-| Fedora 43 / Alma Linux 9 | `bootstrap-fedora.sh` | included |
-| Windows Server 2016/2022 | *manual — see below* | not scripted |
-| pfSense | *manual — see below* | not scripted |
+| Box | OS | Script | Status |
+|---|---|---|---|
+| Blacklist (DB) | Debian 13 | `bootstrap-debian.sh` | included |
+| Concierge (Web) | Fedora 43 | `bootstrap-fedora.sh` | included |
+| Cabal (DC + DNS) | Windows Server 2022 | *manual — see below* | not scripted |
+| Thebox (Firewall) | pfSense | *manual — see below* | not scripted |
 
-Only the two Linux bootstraps ship as scripts. Windows + pfSense are short enough that a checklist beats a script (and Chocolatey/`pkg` one-liners are stable enough to keep in your notes).
+Only the two Linux bootstraps ship as scripts. Windows + pfSense are short enough that a checklist beats a script (Chocolatey/`pkg` one-liners are stable enough to keep in your notes).
 
 ## Linux usage
 
 ```bash
-# Debian 13 / Linux Mint 21
+# Blacklist (Debian 13)
 sudo bash bootstrap-debian.sh
 
-# Fedora 43 / Alma Linux 9
+# Concierge (Fedora 43)
 sudo bash bootstrap-fedora.sh
 ```
 
 Optional flags (env vars before the command):
 
 ```bash
-TEXLIVE=1 sudo bash bootstrap-debian.sh   # also install xelatex (~1 GB)
-EPEL=1    sudo bash bootstrap-fedora.sh   # force EPEL on Alma
-NO_UPDATE=1 sudo bash bootstrap-debian.sh # skip `apt update` if you just ran it
+TEXLIVE=1   sudo bash bootstrap-debian.sh   # also install xelatex (~1 GB)
+NO_UPDATE=1 sudo bash bootstrap-debian.sh   # skip `apt update` if you just ran it
 ```
 
 **Both scripts must be run as root** (via `sudo`). They resolve the original user's home from `$SUDO_USER`, so files end up owned by you, not root.
