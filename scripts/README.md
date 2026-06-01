@@ -6,10 +6,13 @@ Read-only operator toolkit for the eCitadel round. Three lifecycle dirs:
 scripts/
 ├── bootstrap/   # one-shot setup (install FOSS toolkit, stage scripts)
 ├── triage/     # state capture + re-checks + IR evidence
-└── watchdog/   # background delta loggers
+├── watchdog/   # background delta loggers
+└── harden/     # APPLY hardening changes (Windows only, opt-in, idempotent)
 ```
 
-**Nothing here modifies the system.** No service restarts, no killed processes, no firewall edits, no password changes. Everything is `cat` / `ls` / `Get-*` / `pfctl -s*` / `dig` / `ping`. Safe to run repeatedly under scoring pressure.
+**`bootstrap/`, `triage/`, `watchdog/` are read-only.** No service restarts, no killed processes, no firewall edits, no password changes. Everything is `cat` / `ls` / `Get-*` / `pfctl -s*` / `dig` / `ping`. Safe to run repeatedly under scoring pressure.
+
+**`harden/` is the only place that writes state**, and only when the operator opts in. Each script supports `-DryRun`, verifies every change after applying, is idempotent on re-run, and refuses operations that would break scored services (no firewall edits, no mass password reset, no RDP disable, no Administrator disable without a verified replacement admin).
 
 **All scripts write to a hidden workdir** (`~/.ecitadel/` on Linux/laptop, `/root/.ecitadel/` on pfSense, `%USERPROFILE%\.ecitadel\` on Windows). The dir is created `chmod 700` so a casual `ls` doesn't expose your evidence to anyone who shoulder-surfs the console. On Windows the folder is also marked Hidden. To inspect: `ls -la ~/.ecitadel/`.
 
@@ -213,6 +216,38 @@ BASE=172.21.0 bash check-services.sh   # internal (172.21.0.x)
 
 Probes: blacklist SSH/Postgres/MySQL; concierge SSH/HTTP/HTTPS (real curl with status codes); cabal DNS (real `dig rrintel.internal`)/LDAP/LDAPS/Kerberos/SMB/RDP. The scoreboard lags this view by 2-3 min — when the script says green, give the scoring engine one more cycle before declaring victory.
 
+#### `check-policy-linux.sh`
+
+Read-only audit of password policy + account state on **Blacklist / Concierge**. Same pass/warn/fail format as `first-run-checks.sh`. Writes one log per run.
+
+```bash
+sudo bash check-policy-linux.sh
+HARD_MIN_LEN=8 MIN_LEN=16 MAX_AGE_DAYS=60 sudo bash check-policy-linux.sh
+# → ~/.ecitadel/policy-<host>-<ts>.log
+```
+
+Flags: `PASS_MIN_DAYS=0` (allows immediate cycling after a forced reset); `PASS_MIN_LEN` below threshold (default FAIL < 6, WARN < 14); `PASS_MAX_DAYS` > 90; `pwquality.conf` minlen + complexity credits + `enforce_for_root`; PAM stack actually wires in `pam_pwquality` and `remember=` for history; per-user `chage -l` for never-expiring passwords and `min=0`; multiple UID 0 accounts; **empty password hashes in `/etc/shadow`**; unlocked system accounts (UID 1–999 without `!`/`*` in shadow); `sshd_config` (`PermitRootLogin`, `PasswordAuthentication`, `PermitEmptyPasswords`, `MaxAuthTries`); sudoers `NOPASSWD` entries.
+
+Tunables (env): `HARD_MIN_LEN` (FAIL threshold, default 6), `MIN_LEN` (WARN threshold, default 14), `MAX_AGE_DAYS` (default 90), `MIN_AGE_DAYS` (default 1).
+
+Run after the baseline triage, then again after any user/policy inject so you can prove the change took.
+
+#### `check-policy-windows.ps1`
+
+Same idea for **Cabal**. Audits local SAM policy via `net accounts`, AD default domain password policy via `Get-ADDefaultDomainPasswordPolicy`, and the state of the built-in `Administrator` (RID 500) + `Guest` (RID 501) accounts on both local SAM and AD.
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File check-policy-windows.ps1
+.\check-policy-windows.ps1 -MinLen 16 -HardMinLen 8 -MaxAgeDays 60
+# → %USERPROFILE%\.ecitadel\policy-<COMPUTERNAME>-<ts>.log
+```
+
+Flags: `MinimumPasswordLength` below threshold (default FAIL < 6, WARN < 14); `MaximumPasswordAge` > 90; `MinimumPasswordAge` < 1 (allows immediate cycling); `LockoutThreshold` = 0 (no lockout — brute force open) or > 10; `PasswordHistoryLength` < 5; AD: `ComplexityEnabled=False`, `ReversibleEncryptionEnabled=True` (crypto backdoor); **Administrator (RID 500) enabled** — should be disabled and renamed; **Guest (RID 501) enabled** — should be disabled; `DefaultAccount` (RID 503) enabled; any local account with `PasswordRequired=False`; any enabled account with `PasswordNeverExpires`; `krbtgt` password age > 180 days; AD users with `PasswordNotRequired=True`; Domain Admins / Enterprise Admins membership listings; LSA `LimitBlankPasswordUse=0` and `NoLMHash=0`.
+
+Parameters: `-MinLen` (WARN, default 14), `-HardMinLen` (FAIL, default 6), `-MaxAgeDays` (default 90), `-MinAgeDays` (default 1).
+
+Some checks require AD module / DC — those skip gracefully on member servers.
+
 #### `compare-triage.sh`
 
 Diffs two triage logs with noise stripped (PIDs, timestamps, uptime, load averages, epoch numbers). What's left is real signal — a new user, a new port, a service flip, a file change in `/etc`. Color-coded.
@@ -298,6 +333,72 @@ kill $(cat /root/.ecitadel/watchdog-thebox.pid)
 Outputs `/root/.ecitadel/watchdog-thebox-{baseline.txt,.log,.pid}`. Same event vocabulary as Linux + `TICK-DAEMON` (a watched daemon's process count changed).
 
 > **Why no Windows watchdog?** Cabal is the keystone box and gets a heavier operator touch — manual `Get-Service` / `Get-ScheduledTask` cadence plus Event Log filtering covers it. If you want a polling loop on Windows, schedule `windows-triage.ps1` via Task Scheduler at a fixed interval and `diff` the resulting `.log` files.
+
+### harden/
+
+The only directory in `scripts/` that **modifies system state**. Windows-only. Every script in here:
+
+- Supports `-DryRun` (prints what would change, makes no edits)
+- Reads the current value before writing — if it's already at target, the write is **skipped** and counted as no-op
+- Verifies the new value after writing
+- Logs every change to `~/.ecitadel/harden-<name>-<host>-<ts>.log` (binary fingerprint of "what I changed at T+X" for the inject judge)
+- Is **idempotent** — re-running the same script ten times produces the same end-state and the same skip counts
+
+**What's intentionally NOT in `harden/`:**
+
+| CP-style script does | We skip because |
+|---|---|
+| Imports a generic `.wfw` Windows Firewall config | Blocks scored ports (53/88/389/445/636/3389) on Cabal |
+| Disables RDP | RDP is a scored service on Cabal |
+| Mass-resets every user password to one shared value | Scoring engine has cached creds — would zero every AD-backed service for at least one round |
+| Disables SMB or downgrades to file-only mode | SMB is a scored service on Cabal |
+| Disables Administrator unconditionally | Risks locking the team out of the DC; we gate this behind `-DisableBuiltInAdmin` AND a verified replacement admin |
+| Wipes scheduled tasks / services indiscriminately | AD replication, DNS server service, scoring-side dependencies live here |
+
+If you need any of the above, do it by hand against the box's actual scored-service list — not from a script.
+
+#### `harden-registry-windows.ps1`
+
+Applies a curated set of registry hardenings safe for the round.
+
+```powershell
+.\harden-registry-windows.ps1 -DryRun     # show what would change
+.\harden-registry-windows.ps1             # apply
+```
+
+Touches (only these — each verified after write):
+
+- **LSA**: `NoLMHash=1`, `LimitBlankPasswordUse=1`, `RestrictAnonymous=1`, `RestrictAnonymousSAM=1`, `EveryoneIncludesAnonymous=0`
+- **WDigest**: `UseLogonCredential=0` (kills the Mimikatz plaintext-credential cache path)
+- **SMB server**: `RequireSecuritySignature=1`, `EnableSecuritySignature=1`, `SMB1=0` (SMBv2/v3 stays on — AD + scored SMB still work)
+- **SMB client**: matching signing requirements
+- **DNSClient**: `EnableMulticast=0` (disable LLMNR — AD DNS via the DC still resolves)
+- **Explorer**: `NoDriveTypeAutoRun=0xFF`, `NoAutorun=1`
+- **UAC**: `EnableLUA=1`, `ConsentPromptBehaviorAdmin=2`
+- **PowerShell logging**: `ScriptBlockLogging=1`, `ModuleLogging=1` (free forensic visibility)
+
+Some changes (LLMNR, WDigest, SMB signing) need a logoff or reboot to fully take effect. Re-run `check-policy-windows.ps1` after.
+
+#### `harden-accounts-windows.ps1`
+
+Account + password-policy hardening.
+
+```powershell
+.\harden-accounts-windows.ps1 -DryRun
+.\harden-accounts-windows.ps1                                    # apply defaults
+.\harden-accounts-windows.ps1 -MinLen 16 -LockoutThr 10
+.\harden-accounts-windows.ps1 -DisableBuiltInAdmin -NewAdminUser 'op17'
+```
+
+Sections, in order:
+
+1. **Guest** — disable RID-501 on both local SAM and AD. Always safe.
+2. **Local password policy** via `net accounts` — `MinPasswordLength`, `MaxPasswordAge`, `MinPasswordAge`, `PasswordHistoryLength`, `LockoutThreshold`, `LockoutDuration`, `LockoutWindow`. Defaults: `MinLen=14`, `MaxAge=60d`, `MinAge=1d`, `History=24`, `LockoutThr=5`, `LockoutDur=15min`. Lockout duration is deliberately short (15 min) so a single bad-cred probe doesn't park legit auth.
+3. **AD default domain password policy** via `Set-ADDefaultDomainPasswordPolicy` (only on a DC). Same values, plus `ComplexityEnabled=$true` and `ReversibleEncryptionEnabled=$false`.
+4. **PasswordNeverExpires sweep** — clears the flag on every enabled local + AD user. Skips: `krbtgt`, the currently-running user, gMSA / computer accounts (`*$`), RID 500 Administrator, and anything you pass in `-Preserve @('svc_app', 'svc_db')`.
+5. **Built-in Administrator (RID 500)** — disable only when `-DisableBuiltInAdmin` AND `-NewAdminUser <name>` are both set. The script verifies `<name>` is actually in the local Administrators group before disabling RID 500. If the check fails, RID 500 is left alone.
+
+Tunable parameters: `-MinLen`, `-MaxAgeDays`, `-MinAgeDays`, `-History`, `-LockoutThr`, `-LockoutDur`, `-Preserve`.
 
 ---
 
@@ -397,6 +498,8 @@ Pipe that into `diff` for a focused compare.
 | T+10 to T+25 per box | `linux-triage.sh` / `windows-triage.ps1` / `pfsense-triage.sh` / `external-check.sh` | Ground-truth baseline |
 | T+25 onward | `watchdog-linux.sh` / `watchdog-pfsense.sh` backgrounded | Continuous deltas, zero operator effort |
 | Every 5-10 min | `check-network.sh` / `check-services.sh` | Cheap scoreboard / connectivity verify |
+| After baseline + after any user/policy inject | `check-policy-linux.sh` / `check-policy-windows.ps1` | Prove the policy actually took — flags weak min-length, never-expiring passwords, enabled Administrator / Guest |
+| Once, after baseline, with `-DryRun` first | `harden/harden-registry-windows.ps1` + `harden-accounts-windows.ps1` | Apply the safe Cabal hardenings (LM hash off, WDigest off, SMBv1 off, Guest disabled, password policy applied). Re-run `check-policy-windows.ps1` after to confirm |
 | Every ~60 min | Re-run `*-triage.sh` → `compare-triage.sh` | Catches what watchdog doesn't (file changes, sudoers, SUID) |
 | Every console session | `script` / `Start-Transcript` | Post-mortem + IR evidence — "what did I do?" |
 | Before filing any IR | Fresh triage + `external-check.sh` | IR needs current evidence, not 2h-old state |
